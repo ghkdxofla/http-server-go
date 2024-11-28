@@ -16,24 +16,36 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
-	}
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
 
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
-	if err != nil {
-		fmt.Println("Error reading:", err.Error())
-		os.Exit(1)
-	}
+		buf := make([]byte, 2048)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println("Error reading:", err.Error())
+			os.Exit(1)
+		}
 
-	fmt.Println("Received data: ", string(buf[:n]))
+		requestLine, header, body := ParseRequest(string(buf[:n]))
 
-	n, err = conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-	if err != nil {
-		fmt.Println("Error writing:", err.Error())
-		os.Exit(1)
+		fmt.Println("Received line: ", requestLine)
+		fmt.Println("Received header: ", header)
+		fmt.Println("Received body: ", body)
+
+		router := NewRouter()
+		AddEndpoint(router)
+		callback := router.Find(requestLine)
+		response := HandleRequest(requestLine, header, body, callback)
+		fmt.Println("Response: ", response.ToString())
+
+		n, err = conn.Write([]byte(response.ToString()))
+		if err != nil {
+			fmt.Println("Error writing:", err.Error())
+			os.Exit(1)
+		}
 	}
 }
