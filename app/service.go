@@ -1,5 +1,13 @@
 package main
 
-func Echo(_ *RequestLine, _ *Header, requestBody *RequestBody) (string, error) {
-	return requestBody.data, nil
+func Root(request Request) (string, error) {
+	return "", nil
+}
+
+func Echo(request Request) (string, error) {
+	if request.PathParams == nil {
+		return "", nil
+	}
+
+	return (*request.PathParams)["param"], nil
 }

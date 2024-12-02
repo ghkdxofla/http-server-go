@@ -7,9 +7,11 @@ import (
 )
 
 type Request struct {
-	RequestLine RequestLine
-	Header      Header
-	RequestBody RequestBody
+	RequestLine *RequestLine
+	Header      *Header
+	RequestBody *RequestBody
+	PathParams  *Params
+	QueryParams *Params
 }
 
 // CallFunc 공통 호출 함수
@@ -46,15 +48,15 @@ func CallFunc(fn any, args ...any) (any, error) {
 	return out[0].Interface(), nil
 }
 
-func HandleRequest(requestLine *RequestLine, header *Header, requestBody *RequestBody, callback any) *Response {
+func HandleRequest(request Request, callback any) *Response {
 	if callback == nil {
-		return NewResponse(requestLine.Version, StatusNotFound(), nil)
+		return NewResponse(request.RequestLine.Version, StatusNotFound(), nil)
 	}
 
-	result, err := CallFunc(callback, requestLine, header, requestBody)
+	result, err := CallFunc(callback, request)
 	if err != nil {
-		return NewResponse(requestLine.Version, StatusInternalServerError(), err.Error())
+		return NewResponse(request.RequestLine.Version, StatusInternalServerError(), err.Error())
 	}
 
-	return NewResponse(requestLine.Version, StatusOK(), result)
+	return NewResponse(request.RequestLine.Version, StatusOK(), result)
 }

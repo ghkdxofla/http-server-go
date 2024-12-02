@@ -38,8 +38,28 @@ func main() {
 
 		router := NewRouter()
 		AddEndpoint(router)
-		callback := router.Find(requestLine)
-		response := HandleRequest(requestLine, header, body, callback)
+		route := router.Find(requestLine)
+		response := &Response{}
+
+		// TODO: router 처리 개선
+		if route == nil {
+			response = HandleRequest(Request{
+				RequestLine: requestLine,
+				Header:      header,
+				RequestBody: body,
+				PathParams:  nil,
+				QueryParams: nil,
+			}, nil)
+		} else {
+			response = HandleRequest(Request{
+				RequestLine: requestLine,
+				Header:      header,
+				RequestBody: body,
+				PathParams:  route.PathParams,
+				QueryParams: route.QueryParams,
+			}, route.Callback)
+		}
+
 		fmt.Println("Response: ", response.ToString())
 
 		n, err = conn.Write([]byte(response.ToString()))
