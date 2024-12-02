@@ -11,3 +11,11 @@ func Echo(request Request) (string, error) {
 
 	return (*request.PathParams)["param"], nil
 }
+
+func UserAgent(request Request) (string, error) {
+	if request.Header == nil {
+		return "", nil
+	}
+
+	return request.Header.UserAgent, nil
+}
