@@ -1,32 +1,34 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
 
 type Response struct {
-	Version string
-	Status  Status
-	Data    interface{}
+	Version        string
+	Status         Status
+	ResponseHeader *ResponseHeader
+	Data           any
 }
 
-func NewResponse(version string, status Status, data any) *Response {
-	return &Response{
-		Version: version,
-		Status:  status,
-		Data:    data,
+func NewResponse(version string, status Status, contentType *string, data any) Response {
+	responseHeader := NewResponseHeader(contentType, data)
+
+	return Response{
+		Version:        version,
+		Status:         status,
+		ResponseHeader: responseHeader,
+		Data:           data,
 	}
 }
 
 func (r *Response) ToString() string {
-	contentType := "text/plain"
-	contentLength := 0
 	dataString := ""
 
 	if r.Data != nil {
-		contentLength = len(r.Data.(string))
-		dataString = r.Data.(string)
+		dataString = fmt.Sprintf("%s", r.Data)
 	}
 
-	return r.Version + " " + r.Status.ToString() + "\r\n" + "Content-Type: " + contentType + "\r\n" + "Content-Length: " + strconv.Itoa(contentLength) + "\r\n\r\n" + dataString
+	return r.Version + " " + r.Status.ToString() + "\r\n" + "Content-Type: " + r.ResponseHeader.ContentType + "\r\n" + "Content-Length: " + strconv.Itoa(r.ResponseHeader.ContentLength) + "\r\n\r\n" + dataString
 }

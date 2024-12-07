@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -8,6 +9,7 @@ import (
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
+	flag.Parse()
 	fmt.Println("Logs from your program will appear here!")
 
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
@@ -47,7 +49,7 @@ func main() {
 			router := NewRouter()
 			AddEndpoint(router)
 			route := router.Find(requestLine)
-			response := &Response{}
+			var response Response
 
 			// TODO: router 처리 개선
 			if route == nil {

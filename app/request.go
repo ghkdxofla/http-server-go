@@ -1,62 +1,21 @@
 package main
 
-import (
-	"errors"
-	"fmt"
-	"reflect"
-)
-
 type Request struct {
 	RequestLine *RequestLine
-	Header      *Header
+	Header      *RequestHeader
 	RequestBody *RequestBody
 	PathParams  *Params
 	QueryParams *Params
 }
 
-// CallFunc 공통 호출 함수
-func CallFunc(fn any, args ...any) (any, error) {
-	fnValue := reflect.ValueOf(fn)
-	fnType := fnValue.Type()
+type ServiceFunc func(Request) Response
 
-	// 함수 타입 검증
-	if fnType.Kind() != reflect.Func {
-		return nil, errors.New("provided argument is not a function")
-	}
-
-	// 인자 검증
-	if len(args) != fnType.NumIn() {
-		return nil, fmt.Errorf("expected %d arguments, got %d", fnType.NumIn(), len(args))
-	}
-
-	// 인자 변환
-	in := make([]reflect.Value, len(args))
-	for i, arg := range args {
-		if reflect.TypeOf(arg) != fnType.In(i) {
-			return nil, fmt.Errorf("argument %d must be of type %s", i, fnType.In(i))
-		}
-		in[i] = reflect.ValueOf(arg)
-	}
-
-	// 함수 호출
-	out := fnValue.Call(in)
-
-	// 결과 반환
-	if len(out) == 2 && out[1].Interface() != nil {
-		return out[0].Interface(), out[1].Interface().(error)
-	}
-	return out[0].Interface(), nil
-}
-
-func HandleRequest(request Request, callback any) *Response {
+func HandleRequest(request Request, callback ServiceFunc) Response {
 	if callback == nil {
-		return NewResponse(request.RequestLine.Version, StatusNotFound(), nil)
+		return NewResponse(request.RequestLine.Version, StatusNotFound(), nil, nil)
 	}
 
-	result, err := CallFunc(callback, request)
-	if err != nil {
-		return NewResponse(request.RequestLine.Version, StatusInternalServerError(), err.Error())
-	}
+	response := callback(request)
 
-	return NewResponse(request.RequestLine.Version, StatusOK(), result)
+	return response
 }

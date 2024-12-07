@@ -4,11 +4,11 @@ import (
 	"strings"
 )
 
-func ParseRequest(rawRequest string) (*RequestLine, *Header, *RequestBody) {
+func ParseRequest(rawRequest string) (*RequestLine, *RequestHeader, *RequestBody) {
 	rawRequestLine, rawHeader, rawRequestBody := separateRequest(rawRequest)
 
 	requestLine := NewRequestLine(rawRequestLine)
-	header := NewHeader(rawHeader...)
+	header := NewRequestHeader(rawHeader...)
 	requestBody := NewRequestBody(rawRequestBody)
 
 	return requestLine, header, requestBody

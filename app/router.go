@@ -8,7 +8,7 @@ type Params map[string]string
 
 type Route struct {
 	Path     *regexp.Regexp
-	Callback any
+	Callback ServiceFunc
 }
 
 type RouteWithParams struct {
@@ -25,7 +25,7 @@ func NewRouter() *Router {
 	return &Router{}
 }
 
-func (r *Router) Add(method string, path *regexp.Regexp, callback any) {
+func (r *Router) Add(method string, path *regexp.Regexp, callback ServiceFunc) {
 	if r.routes == nil {
 		r.routes = make(map[string][]Route)
 	}

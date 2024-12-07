@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-type Header struct {
+type RequestHeader struct {
 	Host      string
 	UserAgent string
 	Accept    string
 }
 
-func NewHeader(requests ...string) *Header {
+func NewRequestHeader(requests ...string) *RequestHeader {
 	requestMap := make(map[string]string)
 	for _, request := range requests {
 		key, value, err := separateKeyValue(request)
@@ -21,18 +21,49 @@ func NewHeader(requests ...string) *Header {
 		requestMap[key] = value
 	}
 
-	return &Header{
+	return &RequestHeader{
 		Host:      requestMap["Host"],
 		UserAgent: requestMap["User-Agent"],
 		Accept:    requestMap["Accept"],
 	}
 }
 
-func (h *Header) SetHeader() map[string]string {
+func (h *RequestHeader) SetHeader() map[string]string {
 	return map[string]string{
 		"Host":       h.Host,
 		"User-Agent": h.UserAgent,
 		"Accept":     h.Accept,
+	}
+}
+
+type ResponseHeader struct {
+	ContentType   string
+	ContentLength int
+}
+
+func NewResponseHeader(contentType *string, data any) *ResponseHeader {
+	if contentType == nil {
+		contentType = new(string)
+		*contentType = "text/plain"
+	}
+
+	if data == nil || data == "" {
+		return &ResponseHeader{
+			ContentType:   *contentType,
+			ContentLength: 0,
+		}
+	} else {
+		length, err := Length(data)
+		if err != nil {
+			return &ResponseHeader{
+				ContentType:   *contentType,
+				ContentLength: 0,
+			}
+		}
+		return &ResponseHeader{
+			ContentType:   *contentType,
+			ContentLength: length,
+		}
 	}
 }
 
