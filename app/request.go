@@ -18,12 +18,16 @@ func HandleRequest(request Request, callback ServiceFunc) Response {
 	if request.Header != nil && request.Header.ContentHeader != nil {
 		if request.Header.ContentHeader.ContentEncoding == nil {
 			// do nothing
-		} else if *request.Header.ContentHeader.ContentEncoding == "gzip" {
-			data, err := DecompressGzip(request.RequestBody.data)
-			if err != nil {
-				return NewResponse(request.RequestLine.Version, StatusInternalServerError(), nil, nil, nil, err)
+		} else {
+			for _, encoding := range request.Header.ContentHeader.ContentEncoding {
+				if encoding == "gzip" {
+					data, err := DecompressGzip(request.RequestBody.data)
+					if err != nil {
+						return NewResponse(request.RequestLine.Version, StatusInternalServerError(), nil, nil, nil, err)
+					}
+					request.RequestBody.data = data
+				}
 			}
-			request.RequestBody.data = data
 		}
 	}
 

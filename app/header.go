@@ -38,7 +38,14 @@ func NewRequestHeader(requests ...string) *RequestHeader {
 		CheckError(err)
 	}
 
-	requestHeader.ContentHeader = NewContentHeader(requestMap["Content-Type"], &contentLength, requestMap["Accept-Encoding"], nil)
+	var acceptEncoding []string
+	if requestMap["Accept-Encoding"] == nil {
+		acceptEncoding = nil
+	} else {
+		acceptEncoding = strings.Split(*requestMap["Accept-Encoding"], ", ")
+	}
+
+	requestHeader.ContentHeader = NewContentHeader(requestMap["Content-Type"], &contentLength, acceptEncoding, nil)
 
 	return &requestHeader
 }
@@ -46,10 +53,10 @@ func NewRequestHeader(requests ...string) *RequestHeader {
 type ContentHeader struct {
 	ContentType     string
 	ContentLength   int
-	ContentEncoding *string
+	ContentEncoding []string
 }
 
-func NewContentHeader(contentType *string, contentLength *int, contentEncoding *string, data any) *ContentHeader {
+func NewContentHeader(contentType *string, contentLength *int, acceptEncoding []string, data any) *ContentHeader {
 	if contentType == nil {
 		contentType = new(string)
 		*contentType = "text/plain"
@@ -60,11 +67,16 @@ func NewContentHeader(contentType *string, contentLength *int, contentEncoding *
 		*contentLength = 0
 	}
 
-	if contentEncoding != nil {
-		switch *contentEncoding {
-		case "gzip":
-			break
-		default:
+	var contentEncoding []string
+
+	if acceptEncoding != nil {
+		for _, encoding := range acceptEncoding {
+			if encoding == "gzip" {
+				contentEncoding = append(contentEncoding, encoding)
+			}
+		}
+
+		if len(contentEncoding) == 0 {
 			contentEncoding = nil
 		}
 	}

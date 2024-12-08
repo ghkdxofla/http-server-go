@@ -12,7 +12,7 @@ type Response struct {
 	Data           any
 }
 
-func NewResponse(version string, status Status, contentType *string, contentLength *int, contentEncoding *string, data any) Response {
+func NewResponse(version string, status Status, contentType *string, contentLength *int, contentEncoding []string, data any) Response {
 	responseHeader := NewContentHeader(contentType, contentLength, contentEncoding, data)
 
 	return Response{
@@ -35,7 +35,13 @@ func (r *Response) ToString() string {
 		"Content-Type: " + r.ResponseHeader.ContentType + "\r\n"
 
 	if r.ResponseHeader.ContentEncoding != nil {
-		result += "Content-Encoding: " + *r.ResponseHeader.ContentEncoding + "\r\n"
+		contentEncodingString := ""
+		for _, encoding := range r.ResponseHeader.ContentEncoding {
+			contentEncodingString += encoding + ", "
+		}
+		contentEncodingString = contentEncodingString[:len(contentEncodingString)-2]
+
+		result += "Content-Encoding: " + contentEncodingString + "\r\n"
 	}
 
 	result += "Content-Length: " + strconv.Itoa(r.ResponseHeader.ContentLength) + "\r\n\r\n" + dataString
