@@ -5,6 +5,7 @@ import "strconv"
 // enum for status code
 const (
 	StatusCodeOK                  = 200
+	StatusCodeCreated             = 201
 	StatusCodeBadRequest          = 400
 	StatusCodeNotFound            = 404
 	StatusCodeInternalServerError = 500
@@ -13,6 +14,7 @@ const (
 // enum for status message
 const (
 	StatusMessageOK                  = "OK"
+	StatusMessageCreated             = "Created"
 	StatusMessageBadRequest          = "Bad Request"
 	StatusMessageNotFound            = "Not Found"
 	StatusMessageInternalServerError = "Internal Server Error"
@@ -43,6 +45,16 @@ func StatusOK() Status {
 		StatusField: StatusField{
 			Code:    StatusCodeOK,
 			Message: StatusMessageOK,
+		},
+	}
+}
+
+// StatusCreated returns status Created
+func StatusCreated() Status {
+	return Status{
+		StatusField: StatusField{
+			Code:    StatusCodeCreated,
+			Message: StatusMessageCreated,
 		},
 	}
 }

@@ -12,7 +12,7 @@ type ServiceFunc func(Request) Response
 
 func HandleRequest(request Request, callback ServiceFunc) Response {
 	if callback == nil {
-		return NewResponse(request.RequestLine.Version, StatusNotFound(), nil, nil)
+		return NewResponse(request.RequestLine.Version, StatusNotFound(), nil, nil, nil)
 	}
 
 	response := callback(request)

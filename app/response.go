@@ -8,12 +8,12 @@ import (
 type Response struct {
 	Version        string
 	Status         Status
-	ResponseHeader *ResponseHeader
+	ResponseHeader *ContentHeader
 	Data           any
 }
 
-func NewResponse(version string, status Status, contentType *string, data any) Response {
-	responseHeader := NewResponseHeader(contentType, data)
+func NewResponse(version string, status Status, contentType *string, contentLength *int, data any) Response {
+	responseHeader := NewContentHeader(contentType, contentLength, data)
 
 	return Response{
 		Version:        version,

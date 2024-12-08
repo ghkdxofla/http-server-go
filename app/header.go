@@ -2,65 +2,77 @@ package main
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 )
 
 type RequestHeader struct {
-	Host      string
-	UserAgent string
-	Accept    string
+	Host          *string
+	UserAgent     *string
+	Accept        *string
+	ContentHeader *ContentHeader
 }
 
 func NewRequestHeader(requests ...string) *RequestHeader {
-	requestMap := make(map[string]string)
+	requestMap := make(map[string]*string)
 	for _, request := range requests {
 		key, value, err := separateKeyValue(request)
 		if err != nil {
 			continue
 		}
-		requestMap[key] = value
+		requestMap[key] = &value
 	}
 
-	return &RequestHeader{
-		Host:      requestMap["Host"],
-		UserAgent: requestMap["User-Agent"],
-		Accept:    requestMap["Accept"],
+	requestHeader := RequestHeader{
+		Host:          requestMap["Host"],
+		UserAgent:     requestMap["User-Agent"],
+		Accept:        requestMap["Accept"],
+		ContentHeader: nil,
 	}
+
+	if requestMap["Content-Type"] != nil {
+		contentLength, err := strconv.Atoi(*requestMap["Content-Length"])
+		if err != nil {
+			requestHeader.ContentHeader = NewContentHeader(requestMap["Content-Type"], nil, nil)
+		} else {
+			requestHeader.ContentHeader = NewContentHeader(requestMap["Content-Type"], &contentLength, nil)
+		}
+	}
+
+	return &requestHeader
 }
 
-func (h *RequestHeader) SetHeader() map[string]string {
-	return map[string]string{
-		"Host":       h.Host,
-		"User-Agent": h.UserAgent,
-		"Accept":     h.Accept,
-	}
-}
-
-type ResponseHeader struct {
+type ContentHeader struct {
 	ContentType   string
 	ContentLength int
 }
 
-func NewResponseHeader(contentType *string, data any) *ResponseHeader {
+func NewContentHeader(contentType *string, contentLength *int, data any) *ContentHeader {
 	if contentType == nil {
 		contentType = new(string)
 		*contentType = "text/plain"
 	}
 
+	if contentLength == nil {
+		contentLength = new(int)
+		*contentLength = 0
+	}
+
 	if data == nil || data == "" {
-		return &ResponseHeader{
+		return &ContentHeader{
 			ContentType:   *contentType,
-			ContentLength: 0,
+			ContentLength: *contentLength,
 		}
 	} else {
 		length, err := Length(data)
+
 		if err != nil {
-			return &ResponseHeader{
+			return &ContentHeader{
 				ContentType:   *contentType,
-				ContentLength: 0,
+				ContentLength: *contentLength,
 			}
 		}
-		return &ResponseHeader{
+		return &ContentHeader{
 			ContentType:   *contentType,
 			ContentLength: length,
 		}
