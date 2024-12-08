@@ -41,6 +41,33 @@ func Length(v any) (int, error) {
 	}
 }
 
+func CompressGzip(data any) (string, error) {
+	var buf bytes.Buffer
+	var err error
+	handler := gzip.NewWriter(&buf)
+
+	rv := reflect.ValueOf(data)
+	switch rv.Kind() {
+	case reflect.Array, reflect.Slice:
+		_, err = handler.Write(rv.Bytes())
+	case reflect.String:
+		_, err = handler.Write([]byte(rv.String()))
+	default:
+		_, err = handler.Write([]byte(rv.String()))
+	}
+
+	if err != nil {
+		return "", errors.New("gzip 파일을 쓸 수 없습니다")
+	}
+
+	err = handler.Close()
+	if err != nil {
+		return "", errors.New("gzip 파일을 닫을 수 없습니다")
+	}
+
+	return buf.String(), nil
+}
+
 func DecompressGzip(data any) (string, error) {
 	var handler *gzip.Reader
 	var err error
