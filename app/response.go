@@ -12,8 +12,8 @@ type Response struct {
 	Data           any
 }
 
-func NewResponse(version string, status Status, contentType *string, contentLength *int, data any) Response {
-	responseHeader := NewContentHeader(contentType, contentLength, data)
+func NewResponse(version string, status Status, contentType *string, contentLength *int, contentEncoding *string, data any) Response {
+	responseHeader := NewContentHeader(contentType, contentLength, contentEncoding, data)
 
 	return Response{
 		Version:        version,
@@ -30,5 +30,15 @@ func (r *Response) ToString() string {
 		dataString = fmt.Sprintf("%s", r.Data)
 	}
 
-	return r.Version + " " + r.Status.ToString() + "\r\n" + "Content-Type: " + r.ResponseHeader.ContentType + "\r\n" + "Content-Length: " + strconv.Itoa(r.ResponseHeader.ContentLength) + "\r\n\r\n" + dataString
+	result := r.Version + " " +
+		r.Status.ToString() + "\r\n" +
+		"Content-Type: " + r.ResponseHeader.ContentType + "\r\n"
+
+	if r.ResponseHeader.ContentEncoding != nil {
+		result += "Content-Encoding: " + *r.ResponseHeader.ContentEncoding + "\r\n"
+	}
+
+	result += "Content-Length: " + strconv.Itoa(r.ResponseHeader.ContentLength) + "\r\n\r\n" + dataString
+
+	return result
 }

@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"errors"
+	"io"
 	"os"
 	"reflect"
 )
@@ -36,6 +39,46 @@ func Length(v any) (int, error) {
 	default:
 		return 0, errors.New("해당 타입에 대해서 length를 구할 수 없습니다.")
 	}
+}
+
+func DecompressGzip(data any) (string, error) {
+	var handler *gzip.Reader
+	var err error
+
+	rv := reflect.ValueOf(data)
+	switch rv.Kind() {
+	case reflect.Array, reflect.Slice:
+		handler, err = gzip.NewReader(
+			bytes.NewReader(rv.Bytes()),
+		)
+	case reflect.String:
+		if rv.String() == "" {
+			return "", nil
+		}
+
+		handler, err = gzip.NewReader(
+			bytes.NewReader([]byte(rv.String())),
+		)
+	default:
+		handler, err = gzip.NewReader(
+			bytes.NewReader(rv.Bytes()),
+		)
+	}
+
+	if err != nil {
+		return "", errors.New("gzip 파일을 열 수 없습니다")
+	}
+	defer func(handler *gzip.Reader) {
+		err := handler.Close()
+		CheckError(err)
+	}(handler)
+
+	result, err := io.ReadAll(handler)
+
+	if err != nil {
+		return "", errors.New("gzip 파일을 읽을 수 없습니다")
+	}
+	return string(result), nil
 }
 
 func getAbsolutePath(root string, path string) string {

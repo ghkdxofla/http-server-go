@@ -29,25 +29,27 @@ func NewRequestHeader(requests ...string) *RequestHeader {
 		Accept:        requestMap["Accept"],
 		ContentHeader: nil,
 	}
-
-	if requestMap["Content-Type"] != nil {
-		contentLength, err := strconv.Atoi(*requestMap["Content-Length"])
-		if err != nil {
-			requestHeader.ContentHeader = NewContentHeader(requestMap["Content-Type"], nil, nil)
-		} else {
-			requestHeader.ContentHeader = NewContentHeader(requestMap["Content-Type"], &contentLength, nil)
-		}
+	var err error
+	var contentLength int
+	if requestMap["Content-Length"] == nil {
+		contentLength = 0
+	} else {
+		contentLength, err = strconv.Atoi(*requestMap["Content-Length"])
+		CheckError(err)
 	}
+
+	requestHeader.ContentHeader = NewContentHeader(requestMap["Content-Type"], &contentLength, requestMap["Accept-Encoding"], nil)
 
 	return &requestHeader
 }
 
 type ContentHeader struct {
-	ContentType   string
-	ContentLength int
+	ContentType     string
+	ContentLength   int
+	ContentEncoding *string
 }
 
-func NewContentHeader(contentType *string, contentLength *int, data any) *ContentHeader {
+func NewContentHeader(contentType *string, contentLength *int, contentEncoding *string, data any) *ContentHeader {
 	if contentType == nil {
 		contentType = new(string)
 		*contentType = "text/plain"
@@ -58,23 +60,35 @@ func NewContentHeader(contentType *string, contentLength *int, data any) *Conten
 		*contentLength = 0
 	}
 
+	if contentEncoding != nil {
+		switch *contentEncoding {
+		case "gzip":
+			break
+		default:
+			contentEncoding = nil
+		}
+	}
+
 	if data == nil || data == "" {
 		return &ContentHeader{
-			ContentType:   *contentType,
-			ContentLength: *contentLength,
+			ContentType:     *contentType,
+			ContentLength:   *contentLength,
+			ContentEncoding: contentEncoding,
 		}
 	} else {
 		length, err := Length(data)
 
 		if err != nil {
 			return &ContentHeader{
-				ContentType:   *contentType,
-				ContentLength: *contentLength,
+				ContentType:     *contentType,
+				ContentLength:   *contentLength,
+				ContentEncoding: contentEncoding,
 			}
 		}
 		return &ContentHeader{
-			ContentType:   *contentType,
-			ContentLength: length,
+			ContentType:     *contentType,
+			ContentLength:   length,
+			ContentEncoding: contentEncoding,
 		}
 	}
 }
